@@ -22,7 +22,11 @@ function PokemonCard({ id, name, onPress }) {
           resizeMode="contain"
         />
         <Text style={styles.number}>{formatNumber(id)}</Text>
-        <Text style={styles.name}>{capitalize(name)}</Text>
+        
+        {/* numberOfLines={1} prevents the text from breaking into two lines */}
+        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
+          {capitalize(name)}
+        </Text>
       </Pressable>
     </View>
   );
@@ -50,7 +54,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 120,
+    height: 100, 
   },
   number: {
     fontSize: 13,
@@ -61,5 +65,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: colors.text,
+    textAlign: 'center', 
   },
 });

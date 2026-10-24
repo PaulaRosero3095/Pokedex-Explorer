@@ -1,50 +1,76 @@
 // src/hooks/usePokemonSearch.js
-// Custom hook: owns the search state.
-// Separated from usePokemonList because searching is NOT pagination.
-
-import { useState, useCallback } from 'react';
-import { fetchPokemon } from '../api/pokeApi';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { fetchAllPokemonNames } from '../api/pokeApi';
 import { getIdFromUrl } from '../utils/format';
 
-export default function usePokemonSearch() {
-  const [searchResult, setSearchResult] = useState(null);
+export default function usePokemonSearch(initialQuery = '') {
+  const [query, setQuery] = useState(initialQuery);
+  const [searchResults, setSearchResults] = useState([]); // Ahora es un arreglo
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
 
-  const search = useCallback(async (query) => {
-    const cleanQuery = String(query).trim();
-    
-    // If the user searches for nothing, we clear the search
+  // UseRef to store the big list of names so we only fetch it once
+  const allNamesRef = useRef(null);
+
+  useEffect(() => {
+    const cleanQuery = query.trim().toLowerCase();
+
+    // If query is empty, we clear results
     if (cleanQuery === '') {
-      setSearchResult(null);
+      setSearchResults([]);
       setSearchError(null);
+      setSearching(false);
       return;
     }
 
-    setSearching(true);
-    setSearchError(null);
-    setSearchResult(null);
+    
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      setSearchError(null);
+      setSearchResults([]);
 
-    try {
-      const data = await fetchPokemon(cleanQuery);
-      // We adapt the API response to our card format
-      setSearchResult({ id: data.id, name: data.name });
-    } catch (err) {
-      // If it's a 404, it means the Pokémon doesn't exist.
-      if (err.status === 404) {
-        setSearchError('No se encontró ningún Pokémon con ese nombre o número.');
-      } else {
+      try {
+        
+        if (!allNamesRef.current) {
+          allNamesRef.current = await fetchAllPokemonNames();
+        }
+
+        
+        const filtered = allNamesRef.current
+          .filter((p) => {
+            
+            const isNumeric = /^\d+$/.test(cleanQuery);
+            if (isNumeric) {
+              return String(getIdFromUrl(p.url)) === cleanQuery;
+            }
+            return p.name.includes(cleanQuery);
+          })
+          .slice(0, 15); 
+
+        // 3. Format the results
+        const formattedResults = filtered.map((p) => ({
+          id: getIdFromUrl(p.url),
+          name: p.name,
+        }));
+
+        if (formattedResults.length === 0) {
+          setSearchError('No se encontró ningún Pokémon con ese nombre o número.');
+        } else {
+          setSearchResults(formattedResults);
+        }
+      } catch (err) {
         setSearchError('Ocurrió un error al buscar. Intenta de nuevo.');
+      } finally {
+        setSearching(false);
       }
-    } finally {
-      setSearching(false);
-    }
-  }, []);
+    }, 500); 
+
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const clearSearch = useCallback(() => {
-    setSearchResult(null);
-    setSearchError(null);
+    setQuery('');
   }, []);
 
-  return { searchResult, searching, searchError, search, clearSearch };
-}
+  return { query, setQuery, searchResults, searching, searchError, clearSearch };
+} 

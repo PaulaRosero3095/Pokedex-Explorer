@@ -30,3 +30,9 @@ export function fetchPokemon(nameOrId) {
   const query = encodeURIComponent(String(nameOrId).trim().toLowerCase());
   return request(`/pokemon/${query}`);
 }
+
+export async function fetchAllPokemonNames() {
+  // The API has about 1300 Pokémon, so 10000 limit ensures we get all of them
+  const data = await request('/pokemon?limit=10000');
+  return data.results;
+}
