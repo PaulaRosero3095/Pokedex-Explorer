@@ -31,8 +31,14 @@ export function fetchPokemon(nameOrId) {
   return request(`/pokemon/${query}`);
 }
 
+// GET /pokemon?limit=10000  → gets all Pokémon names (for search)
 export async function fetchAllPokemonNames() {
   // The API has about 1300 Pokémon, so 10000 limit ensures we get all of them
   const data = await request('/pokemon?limit=10000');
   return data.results;
+}
+
+// GET /pokemon/{id} → gets the full detail (types, stats, sprites, etc.)
+export function fetchPokemonDetail(id) {
+  return request(`/pokemon/${id}`);
 }

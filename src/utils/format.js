@@ -7,7 +7,7 @@ export function getIdFromUrl(url) {
   return Number(url.split('/').filter(Boolean).pop());
 }
 
-// 25 -> "#025"
+
 export function formatNumber(id) {
   return `#${String(id).padStart(3, '0')}`;
 }
@@ -20,4 +20,18 @@ export function capitalize(text) {
 // Image for the list, without requesting the full detail of each Pokémon
 export function getArtworkUrl(id) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+}
+
+const TYPE_COLORS = {
+  normal: '#A8A77A', fire: '#EE8130', water: '#6390F0',
+  electric: '#F7D02C', grass: '#7AC74C', ice: '#96D9D6',
+  fighting: '#C22E28', poison: '#A33EA1', ground: '#E2BF65',
+  flying: '#A98FF3', psychic: '#F95587', bug: '#A6B91A',
+  rock: '#B6A136', ghost: '#735797', dragon: '#6F35FC',
+  dark: '#705746', steel: '#B7B7CE', fairy: '#D685AD',
+};
+
+export function getTypeColor(typeName) {
+  // If the type is not in our list, we return a default gray color
+  return TYPE_COLORS[typeName.toLowerCase()] || '#777777';
 }
