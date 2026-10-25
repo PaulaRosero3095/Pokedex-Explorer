@@ -1,4 +1,3 @@
-// src/hooks/usePokemonList.js
 // Custom hook: owns the list state (data, loading, error, pagination).
 // It calls the API layer and returns plain values, so screens only render.
 
@@ -10,20 +9,20 @@ import { getIdFromUrl } from '../utils/format';
 const PAGE_SIZE = 20;
 
 export default function usePokemonList() {
-  // Concept: useState for data and every UI state
+  // useState for data and every UI state
   const [pokemon, setPokemon] = useState([]);
   const [loading, setLoading] = useState(true); // first page
   const [loadingMore, setLoadingMore] = useState(false); // next pages
   const [error, setError] = useState(null);
   const [hasMore, setHasMore] = useState(true);
 
-  // Concept: useRef keeps a value between renders WITHOUT causing a re-render.
+  // useRef keeps a value between renders WITHOUT causing a re-render.
   // offsetRef: where the next page starts. busyRef: blocks duplicate requests,
   // because onEndReached can fire several times in a row.
   const offsetRef = useRef(0);
   const busyRef = useRef(false);
 
-  // Concept: useCallback so the function keeps the same identity between renders
+  // useCallback so the function keeps the same identity between renders
   const loadMore = useCallback(async () => {
     if (busyRef.current || !hasMore) return;
 
@@ -53,7 +52,7 @@ export default function usePokemonList() {
     }
   }, [hasMore]);
 
-  // Concept: useEffect with [] -> loads the first page once, when the screen opens
+  // useEffect with [] -> loads the first page once, when the screen opens
   useEffect(() => {
     loadMore();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

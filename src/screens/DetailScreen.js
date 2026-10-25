@@ -1,88 +1,91 @@
-import React, { useState, useEffect } from 'react';
+// src/screens/DetailScreen.js
+// Screen: shows the full detail of one Pokémon. No fetch calls here:
+// the request lives in usePokemonDetail.
+
+import React from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { fetchPokemonDetail } from '../api/pokeApi';
-import { formatNumber, capitalize, getTypeColor } from '../utils/format';
+import usePokemonDetail from '../hooks/usePokemonDetail';
+import { formatNumber, capitalize, getTypeColor, translateType, translateStat } from '../utils/format';
 import StatBar from '../components/StatBar';
 import LoadingView from '../components/LoadingView';
 import ErrorView from '../components/ErrorView';
 import { colors, spacing, radius } from '../theme';
 
 export default function DetailScreen({ pokemonId, onBack }) {
-  const [pokemon, setPokemon] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const { pokemon, loading, error, retry } = usePokemonDetail(pokemonId);
 
-  useEffect(() => {
-    let isMounted = true; 
-    setLoading(true);
-    setError(null);
+  // The back button is shown in EVERY state (loading, error and success),
+  // so the user is never trapped on this screen
+  const header = (
+    <View style={styles.header}>
+      <Pressable onPress={onBack} style={styles.backButton}>
+        <Text style={styles.backButtonText}>← Volver a la lista</Text>
+      </Pressable>
+    </View>
+  );
 
-    fetchPokemonDetail(pokemonId)
-      .then((data) => { if (isMounted) setPokemon(data); })
-      .catch((err) => { if (isMounted) setError(err); })
-      .finally(() => { if (isMounted) setLoading(false); });
-
-    return () => { isMounted = false; };
-  }, [pokemonId, retryCount]);
-
-  if (loading) return <LoadingView message="Cargando ficha..." />;
-  
-  if (error || !pokemon) {
-    return <ErrorView message="No pudimos cargar la ficha." onRetry={() => setRetryCount(c => c + 1)} />;
+  // UI state: loading
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.screen}>
+        {header}
+        <LoadingView message="Cargando ficha..." />
+      </SafeAreaView>
+    );
   }
 
-  const heightInMeters = (pokemon.height / 10).toFixed(1);
-  const weightInKg = (pokemon.weight / 10).toFixed(1);
-  const imageUrl = pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default;
+  // UI state: error
+  if (error || !pokemon) {
+    return (
+      <SafeAreaView style={styles.screen}>
+        {header}
+        <ErrorView
+          message="No pudimos cargar la ficha. Revisa tu conexión e inténtalo de nuevo."
+          onRetry={retry}
+        />
+      </SafeAreaView>
+    );
+  }
 
+  // UI state: success
   return (
     <SafeAreaView style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        
-        <View style={styles.header}>
-          <Pressable onPress={onBack} style={styles.backButton}>
-            <Text style={styles.backButtonText}>← Volver a la lista</Text>
-          </Pressable>
-        </View>
-
+      {header}
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.mainInfo}>
           <Text style={styles.number}>{formatNumber(pokemon.id)}</Text>
           <Text style={styles.name}>{capitalize(pokemon.name)}</Text>
-          <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="contain" />
+          {/* A remote Image needs explicit width and height */}
+          <Image source={{ uri: pokemon.image }} style={styles.image} resizeMode="contain" />
         </View>
 
         <View style={styles.typesContainer}>
-          {pokemon.types.map((typeInfo) => {
-            const typeName = typeInfo.type.name;
-            return (
-              <View key={typeName} style={[styles.typeBadge, { backgroundColor: getTypeColor(typeName) }]}>
-                <Text style={styles.typeText}>{capitalize(typeName)}</Text>
-              </View>
-            );
-          })}
+          {pokemon.types.map((typeName) => (
+            <View key={typeName} style={[styles.typeBadge, { backgroundColor: getTypeColor(typeName) }]}>
+              <Text style={styles.typeText}>{translateType(typeName)}</Text>
+            </View>
+          ))}
         </View>
 
         <View style={styles.measuresContainer}>
           <View style={styles.measureBox}>
-            <Text style={styles.measureValue}>{heightInMeters} m</Text>
+            <Text style={styles.measureValue}>{pokemon.heightM.toFixed(1)} m</Text>
             <Text style={styles.measureLabel}>Altura</Text>
           </View>
           <View style={styles.measureBox}>
-            <Text style={styles.measureValue}>{weightInKg} kg</Text>
+            <Text style={styles.measureValue}>{pokemon.weightKg.toFixed(1)} kg</Text>
             <Text style={styles.measureLabel}>Peso</Text>
           </View>
         </View>
 
         <View style={styles.statsContainer}>
-          <Text style={styles.sectionTitle}>Estadísticas Base</Text>
-          {pokemon.stats.map((statInfo) => (
-            <StatBar key={statInfo.stat.name} name={statInfo.stat.name} value={statInfo.base_stat} />
+          <Text style={styles.sectionTitle}>Estadísticas base</Text>
+          {pokemon.stats.map((stat) => (
+            <StatBar key={stat.name} label={translateStat(stat.name)} value={stat.value} />
           ))}
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -91,7 +94,7 @@ export default function DetailScreen({ pokemonId, onBack }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   scrollContent: { padding: spacing.md, paddingBottom: spacing.xl },
-  header: { flexDirection: 'row', marginBottom: spacing.md },
+  header: { flexDirection: 'row', padding: spacing.md },
   backButton: {
     paddingVertical: spacing.sm, paddingHorizontal: spacing.md,
     backgroundColor: colors.surface, borderRadius: radius.md,
@@ -104,7 +107,7 @@ const styles = StyleSheet.create({
   image: { width: 200, height: 200 },
   typesContainer: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, marginBottom: spacing.lg },
   typeBadge: { paddingVertical: spacing.xs, paddingHorizontal: spacing.lg, borderRadius: 20 },
-  typeText: { color: '#FFF', fontWeight: 'bold', fontSize: 16, textTransform: 'capitalize' },
+  typeText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
   measuresContainer: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: spacing.xl },
   measureBox: {
     alignItems: 'center', backgroundColor: colors.surface, padding: spacing.md,

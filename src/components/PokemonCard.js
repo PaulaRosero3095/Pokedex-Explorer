@@ -1,4 +1,3 @@
-// src/components/PokemonCard.js
 // Presentational component: it only draws what it receives through props.
 
 import React from 'react';
@@ -15,7 +14,7 @@ function PokemonCard({ id, name, onPress }) {
         onPress={() => onPress(id)}
         style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       >
-        {/* Concept: a remote Image NEEDS explicit width and height or it is invisible */}
+        {/* a remote Image NEEDS explicit width and height or it is invisible */}
         <Image
           source={{ uri: getArtworkUrl(id) }}
           style={styles.image}
@@ -32,7 +31,7 @@ function PokemonCard({ id, name, onPress }) {
   );
 }
 
-// Concept: React.memo avoids re-drawing cards that did not change when more are loaded
+// React.memo avoids re-drawing cards that did not change when more are loaded
 export default React.memo(PokemonCard);
 
 const styles = StyleSheet.create({

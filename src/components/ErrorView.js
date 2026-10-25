@@ -1,6 +1,4 @@
-// src/components/ErrorView.js
 // UI state: error (clear message in Spanish + "Reintentar" button)
-
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 

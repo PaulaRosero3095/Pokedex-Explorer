@@ -1,4 +1,3 @@
-// src/utils/format.js
 // Small pure helpers: no state, no JSX.
 
 // The list endpoint only gives name + url, so the id is the last piece of the url
@@ -7,7 +6,7 @@ export function getIdFromUrl(url) {
   return Number(url.split('/').filter(Boolean).pop());
 }
 
-
+// 25 -> "#025"
 export function formatNumber(id) {
   return `#${String(id).padStart(3, '0')}`;
 }
@@ -34,4 +33,32 @@ const TYPE_COLORS = {
 export function getTypeColor(typeName) {
   // If the type is not in our list, we return a default gray color
   return TYPE_COLORS[typeName.toLowerCase()] || '#777777';
+}
+
+// The API returns English names, but the interface must be in Spanish
+const TYPE_NAMES_ES = {
+  normal: 'Normal', fire: 'Fuego', water: 'Agua', electric: 'Eléctrico',
+  grass: 'Planta', ice: 'Hielo', fighting: 'Lucha', poison: 'Veneno',
+  ground: 'Tierra', flying: 'Volador', psychic: 'Psíquico', bug: 'Bicho',
+  rock: 'Roca', ghost: 'Fantasma', dragon: 'Dragón', dark: 'Siniestro',
+  steel: 'Acero', fairy: 'Hada',
+};
+
+const STAT_NAMES_ES = {
+  hp: 'PS',
+  attack: 'Ataque',
+  defense: 'Defensa',
+  'special-attack': 'Ataque esp.',
+  'special-defense': 'Defensa esp.',
+  speed: 'Velocidad',
+};
+
+// "fire" -> "Fuego" (unknown types fall back to the capitalized API name)
+export function translateType(name) {
+  return TYPE_NAMES_ES[name] ?? capitalize(name);
+}
+
+// "special-attack" -> "Ataque esp."
+export function translateStat(name) {
+  return STAT_NAMES_ES[name] ?? capitalize(name);
 }

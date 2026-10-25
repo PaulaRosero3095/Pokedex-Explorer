@@ -1,4 +1,3 @@
-// src/theme/index.js
 // Central place for colors and spacing so every component looks consistent.
 
 export const colors = {
@@ -8,6 +7,7 @@ export const colors = {
   text: '#1F2937',
   textSoft: '#6B7280',
   border: '#E5E7EB',
+  error: '#DC2626',
 };
 
 export const spacing = {
@@ -19,5 +19,6 @@ export const spacing = {
 };
 
 export const radius = {
+  sm: 8,
   md: 16,
 };
